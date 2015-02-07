@@ -135,7 +135,7 @@ public class FileSystemProxy extends CommandLineTool {
                 name = logicalNames[idx].trim();
             }
             String uri = root.resolve(subdirectories[idx].trim()).toString();
-            if (!proxy.appendHandler(name, chatty, "", uri, virtualHost)) {
+            if (!proxy.appendHandler(name, chatty, "", virtualHost, uri)) {
                 System.err.println("Could not create context handler for " + virtualHost);
                 return;
             }

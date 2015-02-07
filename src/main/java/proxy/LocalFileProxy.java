@@ -48,12 +48,13 @@ public class LocalFileProxy {
     }
 
     public void startServer(int port) throws Exception {
-        System.out.println("Starting file proxy server, mappings:");
+        System.out.println("\nStarting file proxy server, mappings:");
         for (ContextHandlerInterceptor context : handlers) {
             for (String vh : context.getVirtualHosts()) {
                 System.out.println("Virtual host: " + vh);
             }
         }
+        System.out.println();
         Server server = new Server();
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
@@ -67,7 +68,7 @@ public class LocalFileProxy {
         //contexts.setHandlers((Handler[])handlers)
         server.setHandler(contexts);
         server.start();
-        System.out.println("File proxy server is running, listening on port " + port);
+        System.out.println("\nFile proxy server is running, listening on port " + port + "\n");
         server.join();
     }
 
