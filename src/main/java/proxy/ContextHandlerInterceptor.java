@@ -9,13 +9,17 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Enumeration;
 
+/**
+ * Class for extending ContextHandler with logging and header handling
+ */
 public class ContextHandlerInterceptor extends ContextHandler {
     private String domainName = "";
     private String logicalName = "";
     private boolean displayMatch = false;
     private boolean displayRequestHeaders = false;
 
-    public void doHandle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    public void doHandle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
         super.doHandle(target, baseRequest, request, response);
         if (baseRequest.isHandled()) {
             if (displayRequestHeaders) {

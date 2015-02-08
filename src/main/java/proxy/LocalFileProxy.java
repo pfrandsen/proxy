@@ -4,6 +4,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.resource.Resource;
@@ -19,13 +20,13 @@ import java.util.ArrayList;
 public class LocalFileProxy {
     private static int DEFAULT_PORT = 9902;
 
-    private ArrayList<ContextHandlerInterceptor> handlers;
+    private ArrayList<ContextHandler> handlers;
 
     public LocalFileProxy() {
         handlers = new ArrayList<>();
     }
 
-    public boolean appendHandler(String name, boolean chatty, String contextPath, String virtualHost, String path) {
+    public boolean appendContextHandler(String name, boolean chatty, String contextPath, String virtualHost, String path) {
         String uri = checkPathAndGetUri(path);
         if (uri.length() == 0) {
             System.err.println("Error: Could not create handler '" + name + "' for '" + path + "'.");
@@ -39,6 +40,14 @@ public class LocalFileProxy {
         }
     }
 
+    public boolean appendShutdownHandler(String contextPath, String shutdownKey) {
+        String[] virtualHosts = {"localhost"};
+        ShutdownContextHandler sd = new ShutdownContextHandler(shutdownKey);
+        sd.setVirtualHosts(virtualHosts);
+        sd.setContextPath(contextPath);
+        return handlers.add(sd);
+    }
+
     public int getDefaultPort() {
         return DEFAULT_PORT;
     }
@@ -49,7 +58,7 @@ public class LocalFileProxy {
 
     public void startServer(int port) throws Exception {
         System.out.println("\nStarting file proxy server, mappings:");
-        for (ContextHandlerInterceptor context : handlers) {
+        for (ContextHandler context : handlers) {
             for (String vh : context.getVirtualHosts()) {
                 System.out.println("Virtual host: " + vh);
             }
@@ -61,11 +70,8 @@ public class LocalFileProxy {
         Connector[] connectors = new ServerConnector[1];
         connectors[0] = connector;
         server.setConnectors(connectors);
-
-        //setupHandlers(config)
         ContextHandlerCollection contexts = new ContextHandlerCollection();
         contexts.setHandlers(handlers.toArray(new Handler[handlers.size()]));
-        //contexts.setHandlers((Handler[])handlers)
         server.setHandler(contexts);
         server.start();
         System.out.println("\nFile proxy server is running, listening on port " + port + "\n");
@@ -99,32 +105,11 @@ public class LocalFileProxy {
             context.setContextPath(contextPath);
         }
         context.setVirtualHost(virtualHost);
+        // setup filesystem resource handler for the given directory
         ResourceHandler resourceHandler = new ResourceHandler();
         resourceHandler.setBaseResource(Resource.newResource(uri));
         context.setHandler(resourceHandler);
         return context;
     }
 
-    /*public static void main(String[] args) {
-        ConfigParameters config = new ConfigParameters()
-        CliBuilder cli = commandlineParser(config)
-        def options = cli.parse(args)
-        if (!options) {
-            return
-        }
-        cli.usage()
-        System.out.println("Starting deception schema server")
-        Server server = new Server()
-        ServerConnector connector = new ServerConnector(server)
-        connector.setPort(config.port)
-        server.setConnectors((Connector[])[connector])
-        setupHandlers(config)
-        ContextHandlerCollection contexts = new ContextHandlerCollection()
-        contexts.setHandlers((Handler[])handlers)
-        server.setHandler(contexts)
-        server.start()
-        System.out.println("Deception schema server running")
-        server.join()
-    }
-*/
 }

@@ -48,7 +48,10 @@ public class Runner {
         addDummyOption(options, FileSystemProxy.OPTION_PORT, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_VIRTUAL_HOSTS, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_SUBDIRECTORIES, true);
+        addDummyOption(options, FileSystemProxy.OPTIONS_CONTEXT_PATHS, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_LOGICAL_NAMES, true);
+        addDummyOption(options, FileSystemProxy.OPTIONS_SHUTDOWN_CONTEXT, true);
+        addDummyOption(options, FileSystemProxy.OPTIONS_SHUTDOWN_KEY, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_CHATTY, false);
 
         // options used by transparent host proxy tool
