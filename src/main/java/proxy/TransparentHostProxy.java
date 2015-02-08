@@ -13,10 +13,18 @@ public class TransparentHostProxy extends ProxyServlet {
     String proxyTo;       // the server to transparently proxy to if host header matches proxyHosts (example http://localhost:9902)
     boolean chatty;       // if true, log rewrites to console
     private String shutdownKey = null;
+    private String shutdownContext = "/shutdown"; // default shutdown http://localhost/shutdown/{key}
     private boolean enableShutdown = false;
 
     public TransparentHostProxy(String[] hosts, String proxy, boolean logRewrites) {
-        proxyHosts = hosts != null ? hosts : new String[0];
+        if (hosts != null) {
+            proxyHosts = new String[hosts.length];
+            for (int idx = 0; idx < hosts.length; idx++) {
+                proxyHosts[idx] = hosts[idx] == null ? "" : hosts[idx].trim();
+            }
+        } else {
+            proxyHosts = new String[0];
+        }
         proxyTo = proxy != null ? proxy : "";
         chatty = logRewrites;
     }
@@ -35,15 +43,21 @@ public class TransparentHostProxy extends ProxyServlet {
         return rewrittenURI;
     }
 
-    protected void service(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+    protected void service(final HttpServletRequest request, final HttpServletResponse response) throws
+            ServletException, IOException {
         //System.out.println("service ${request.getServerName()} ${request.getRequestURI()} ${request.getQueryString()}")
-        if (enableShutdown && request.getQueryString() != null && "localhost".equalsIgnoreCase(request.getServerName())
-                && "/shutdown".equals(request.getRequestURI())) {
+        /* if (enableShutdown && request.getQueryString() != null && "localhost".equalsIgnoreCase(request.getServerName())
+                && ("/shutdown" + "/" + shutdownKey).equals(request.getRequestURI())) {
             String key = "key=" + shutdownKey;
             if (shutdownKey != null && key.equals(request.getQueryString())) {
                 System.out.println("Received shutdown signal");
                 System.exit(0);
             }
+        }*/
+        if (enableShutdown && "localhost".equalsIgnoreCase(request.getServerName())
+                && (shutdownContext + "/" + shutdownKey).equals(request.getRequestURI())) {
+            System.out.println("Received shutdown signal");
+            System.exit(0);
         }
         super.service(request, response);
     }
@@ -56,14 +70,9 @@ public class TransparentHostProxy extends ProxyServlet {
         shutdownKey = key;
     }
 
-/*  protected void onResponseHeaders(HttpServletRequest request, HttpServletResponse response, Response proxyResponse) {
-    System.out.println("onResponseHeaders")
-    for (HttpField field : proxyResponse.getHeaders()) {
-      System.out.println("field.getName() + " " + field.getValue());
+    public void setShutdownContext(String context) {
+        shutdownContext = context;
     }
-    super.onResponseHeaders(request, response, proxyResponse);
-  }
-*/
 
     private boolean doProxy(String hostName) {
         for (String host : proxyHosts) {
