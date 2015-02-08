@@ -18,8 +18,6 @@ import java.util.ArrayList;
  * Proxy for a list of local directories. Each directory is exposed via a virtual host.
  */
 public class LocalFileProxy {
-    private static int DEFAULT_PORT = 9902;
-
     private ArrayList<ContextHandler> handlers;
 
     public LocalFileProxy() {
@@ -46,14 +44,6 @@ public class LocalFileProxy {
         sd.setVirtualHosts(virtualHosts);
         sd.setContextPath(contextPath);
         return handlers.add(sd);
-    }
-
-    public int getDefaultPort() {
-        return DEFAULT_PORT;
-    }
-
-    public void startServer() throws Exception {
-        startServer(getDefaultPort());
     }
 
     public void startServer(int port) throws Exception {

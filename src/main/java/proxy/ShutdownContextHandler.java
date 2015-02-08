@@ -18,7 +18,7 @@ public class ShutdownContextHandler  extends ContextHandler {
     private String shutdownKey;
 
     /**
-     * @param shutdownKey
+     * @param shutdownKey key used as part of url to shut down server; all whitespace is removed from value
      */
     public ShutdownContextHandler(String shutdownKey) {
         this.shutdownKey = shutdownKey.replaceAll("\\s", "");

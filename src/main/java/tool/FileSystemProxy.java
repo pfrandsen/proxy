@@ -10,34 +10,28 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileSystemProxy extends CommandLineTool {
-
-    private static int MIN_PORT_VALUE = 1000;
+    private static int DEFAULT_PORT = 9902;
+    private static int MIN_PORT_VALUE = 1024;
     private static int MAX_PORT_VALUE = 65535;
     public static String DEFAULT_SHUTDOWN_KEY = "12345";
     public static String SHUTDOWN_VIRTUAL_HOST = "localhost";
     public static String OPTION_ROOT = "root";
-    public static String OPTION_PORT = "port";
     public static String OPTIONS_VIRTUAL_HOSTS = "virtualHosts";
     public static String OPTIONS_SUBDIRECTORIES = "subdirectories";
     public static String OPTIONS_CONTEXT_PATHS = "contextPaths";
     public static String OPTIONS_LOGICAL_NAMES = "logicalNames";
-    public static String OPTIONS_CHATTY = "chatty";
     public static String OPTIONS_SHUTDOWN_CONTEXT = "shutdownContext";
-    public static String OPTIONS_SHUTDOWN_KEY = "shutdownKey";
 
 
     // context path, / -> no context path
 
     public static String USAGE = "Usage: java -jar <jar-file> " + arg(Runner.OPTION_FILESYSTEM_PROXY) + " " +
-            arg(OPTION_ROOT) + " <directory> [" + arg(OPTION_PORT) + " <port>] " + arg(OPTIONS_VIRTUAL_HOSTS) +
-            " <host> [<,host>]* " + arg(OPTIONS_SUBDIRECTORIES) + " <subdirectory> [<,subdirectory>]* " +
-            arg(OPTIONS_CONTEXT_PATHS) + " <context> [<,context>]* " + arg(OPTIONS_LOGICAL_NAMES) +
-            " <name> [<,name>]* [" + arg(OPTIONS_CHATTY) + "] ["  + arg(OPTIONS_SHUTDOWN_CONTEXT) + "<context> [" +
-            arg(OPTIONS_SHUTDOWN_KEY) +" <key>]]";
+            arg(OPTION_ROOT) + " <directory> [" + arg(Runner.OPTION_PORT) + " <port>] " + arg(OPTIONS_VIRTUAL_HOSTS) +
+            " <host> [,<host>]* " + arg(OPTIONS_SUBDIRECTORIES) + " <subdirectory> [,<subdirectory>]* " +
+            arg(OPTIONS_CONTEXT_PATHS) + " <context> [,<context>]* " + arg(OPTIONS_LOGICAL_NAMES) +
+            " <name> [,<name>]* [" + arg(Runner.OPTIONS_CHATTY) + "] ["  + arg(OPTIONS_SHUTDOWN_CONTEXT)
+            + "<context> [" + arg(Runner.OPTIONS_SHUTDOWN_KEY) +" <key>]]";
 
-    // root directory
-    // port
-    // list of virtual (host, subdir)
     public static void main(String[] args) {
         FileSystemProxy tool = new FileSystemProxy();
         CommandLine cmd;
@@ -68,8 +62,8 @@ public class FileSystemProxy extends CommandLineTool {
                 "Root directory. All virtual host to subdirectory mappings are relative to this.");
         root.setRequired(true);
         root.setArgName("directory");
-        Option port = new Option(OPTION_PORT, true, "Port proxy server will listen on. Valid range " +
-                MIN_PORT_VALUE + "-" + MAX_PORT_VALUE + ". Optional.");
+        Option port = new Option(Runner.OPTION_PORT, true, "Port proxy server will listen on. Valid range " +
+                MIN_PORT_VALUE + "-" + MAX_PORT_VALUE + ". Default port is " + DEFAULT_PORT + ". Optional.");
         port.setRequired(false);
         port.setType(Number.class);
 
@@ -98,17 +92,17 @@ public class FileSystemProxy extends CommandLineTool {
         logicalNames.setValueSeparator(',');
 
         Option shutdownContext = new Option(OPTIONS_SHUTDOWN_CONTEXT, true, "If provided proxy will listen to "
-                + "shutdown requests on " + SHUTDOWN_VIRTUAL_HOST + "/<context>/{" + OPTIONS_SHUTDOWN_KEY
+                + "shutdown requests on " + SHUTDOWN_VIRTUAL_HOST + "/<context>/{" + Runner.OPTIONS_SHUTDOWN_KEY
                         + "}. Optional.");
         shutdownContext.setRequired(false);
 
-        Option shutdownKey = new Option(OPTIONS_SHUTDOWN_KEY, true, "Key used for shutting down proxy server. Default "
-                + "value is '" + DEFAULT_SHUTDOWN_KEY + "'. See description of " + arg(OPTIONS_SHUTDOWN_CONTEXT)
+        Option shutdownKey = new Option(Runner.OPTIONS_SHUTDOWN_KEY, true, "Key used for shutting down proxy server. "
+                + "Default value is '" + DEFAULT_SHUTDOWN_KEY + "'. See description of " + arg(OPTIONS_SHUTDOWN_CONTEXT)
                 + " for format of shutdown request. Key is ignored if " + arg(OPTIONS_SHUTDOWN_CONTEXT)
                 + " is not provided. Optional.");
         shutdownKey.setRequired(false);
 
-        Option chatty = new Option(OPTIONS_CHATTY, false, "Set debug output to high. Optional.");
+        Option chatty = new Option(Runner.OPTIONS_CHATTY, false, "Set debug output to high. Optional.");
         chatty.setRequired(false);
 
         options.addOption(help);
@@ -128,15 +122,15 @@ public class FileSystemProxy extends CommandLineTool {
     @Override
     public void run(CommandLine cmd) {
         LocalFileProxy proxy = new LocalFileProxy();
-        int port = proxy.getDefaultPort();
+        int port = DEFAULT_PORT; // proxy.getDefaultPort();
         Path root = Paths.get(cmd.getOptionValue(OPTION_ROOT));
-        if (cmd.hasOption(OPTION_PORT)) {
-            if (!isInteger(cmd.getOptionValue(OPTION_PORT), MIN_PORT_VALUE, MAX_PORT_VALUE)) {
-                System.err.println("Port (" + cmd.getOptionValue(OPTION_PORT) + ") must be integer in range " +
+        if (cmd.hasOption(Runner.OPTION_PORT)) {
+            if (!isInteger(cmd.getOptionValue(Runner.OPTION_PORT), MIN_PORT_VALUE, MAX_PORT_VALUE)) {
+                System.err.println("Port (" + cmd.getOptionValue(Runner.OPTION_PORT) + ") must be integer in range " +
                 MIN_PORT_VALUE + "-" + MAX_PORT_VALUE);
                 return;
             }
-            port = parseInt(cmd.getOptionValue(OPTION_PORT));
+            port = parseInt(cmd.getOptionValue(Runner.OPTION_PORT));
         }
         String[] virtualHosts = cmd.getOptionValues(OPTIONS_VIRTUAL_HOSTS);
         String[] subdirectories = cmd.getOptionValues(OPTIONS_SUBDIRECTORIES);
@@ -163,7 +157,7 @@ public class FileSystemProxy extends CommandLineTool {
                 return;
             }
         }
-        boolean chatty = cmd.hasOption(OPTIONS_CHATTY);
+        boolean chatty = cmd.hasOption(Runner.OPTIONS_CHATTY);
 
         // create the context handlers
         for (int idx = 0; idx < virtualHosts.length; idx++) {
@@ -186,8 +180,8 @@ public class FileSystemProxy extends CommandLineTool {
         if (cmd.hasOption(OPTIONS_SHUTDOWN_CONTEXT)) {
             String context = cmd.getOptionValue(OPTIONS_SHUTDOWN_CONTEXT);
             String key = DEFAULT_SHUTDOWN_KEY;
-            if (cmd.hasOption(OPTIONS_SHUTDOWN_KEY)) {
-                key = cmd.getOptionValue(OPTIONS_SHUTDOWN_KEY);
+            if (cmd.hasOption(Runner.OPTIONS_SHUTDOWN_KEY)) {
+                key = cmd.getOptionValue(Runner.OPTIONS_SHUTDOWN_KEY);
             }
             proxy.appendShutdownHandler(context, key);
         }

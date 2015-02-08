@@ -10,10 +10,14 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class Runner {
-    //public static String OPTION_ROOT = "root";  // option shared by all tools
+    // shared options for tools
+    public static String OPTION_PORT = "port";
+    public static String OPTIONS_CHATTY = "chatty";
+    public static String OPTIONS_SHUTDOWN_KEY = "shutdownKey";
+    public static String OPTION_HELP = "help";
+    // options for selecting tool
     public static String OPTION_FILESYSTEM_PROXY = "filesystemProxy";
     public static String OPTION_TRANSPARENT_HOST = "transparentHostProxy";
-    public static String OPTION_HELP = "help";
     static private String USAGE = "to get help for tool use: java -jar <jar-file> -" + OPTION_HELP + " -<tool>";
 
     private static void printHelp() {
@@ -41,20 +45,23 @@ public class Runner {
 
         // Add options for all the "sub" tools to avoid command line parsing error
         // shared option(s)
-
+        addDummyOption(options, OPTION_PORT, true);
+        addDummyOption(options, OPTIONS_CHATTY, false);
+        addDummyOption(options, OPTIONS_SHUTDOWN_KEY, true);
 
         // options used by filesystem proxy tool
         addDummyOption(options, FileSystemProxy.OPTION_ROOT, true);
-        addDummyOption(options, FileSystemProxy.OPTION_PORT, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_VIRTUAL_HOSTS, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_SUBDIRECTORIES, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_CONTEXT_PATHS, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_LOGICAL_NAMES, true);
         addDummyOption(options, FileSystemProxy.OPTIONS_SHUTDOWN_CONTEXT, true);
-        addDummyOption(options, FileSystemProxy.OPTIONS_SHUTDOWN_KEY, true);
-        addDummyOption(options, FileSystemProxy.OPTIONS_CHATTY, false);
 
         // options used by transparent host proxy tool
+        addDummyOption(options, TransparentHost.OPTIONS_PROXY_TO_URI, true);
+        addDummyOption(options, TransparentHost.OPTIONS_HOSTS, true);
+
+
         return options;
     }
 
@@ -63,7 +70,7 @@ public class Runner {
             return new FileSystemProxy();
         }
         if (cmd.hasOption(OPTION_TRANSPARENT_HOST)) {
-            //return new TransparentHost();
+            return new TransparentHost();
         }
         return null;
     }
