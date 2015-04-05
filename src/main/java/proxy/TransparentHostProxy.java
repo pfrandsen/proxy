@@ -1,6 +1,10 @@
 package proxy;
 
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.proxy.ProxyServlet;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -9,6 +13,7 @@ import java.io.IOException;
 import java.net.URI;
 
 public class TransparentHostProxy extends ProxyServlet {
+    public static final String VIA_HEADER = "Transparent host proxy";
     String[] proxyHosts;  // hosts to transparently proxy
     String proxyTo;       // the server to transparently proxy to if host header matches proxyHosts (example http://localhost:9902)
     boolean chatty;       // if true, log rewrites to console
@@ -31,8 +36,12 @@ public class TransparentHostProxy extends ProxyServlet {
 
     protected URI rewriteURI(HttpServletRequest request) {
         if (!doProxy(request.getServerName())) {
+            URI rewritten = super.rewriteURI(request);
+            request.getProtocol();
+            System.out.println("Dispatching " + request.getRequestURI() + " to " + rewritten);
             // System.out.println("Dispatching request to ${request.getServerName()}")
-            return super.rewriteURI(request);
+            //return super.rewriteURI(request);
+            return rewritten;
         }
         String query = request.getQueryString() == null ? "" : "?" + request.getQueryString();
         URI rewrittenURI = URI.create(proxyTo + request.getRequestURI() + query).normalize();
@@ -82,4 +91,17 @@ public class TransparentHostProxy extends ProxyServlet {
         }
         return false; // do not proxy
     }
+
+    protected HttpClient newHttpClient() {
+        System.out.println("Creating http client");
+        SslContextFactory sslContextFactory = new SslContextFactory();
+        return new HttpClient(sslContextFactory);
+    }
+
+    protected Request addViaHeader(Request proxyRequest) {
+        System.out.println("addViaHeader");
+        // proxyRequest.header(HttpHeader.VIA, VIA_HEADER);
+        return proxyRequest;
+    }
+
 }

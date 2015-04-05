@@ -115,8 +115,9 @@ public class TransparentHost extends CommandLineTool {
         proxy.setShutdownContext(shutdownContext);
 
         Server server = new Server(port);
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS |
-                ServletContextHandler.NO_SECURITY);
+        //ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS |
+        //        ServletContextHandler.NO_SECURITY);
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SECURITY);
         context.setContextPath("/");
 
         ServletHolder proxyServletHolder = new ServletHolder(proxy); // just to set init parameters
@@ -130,7 +131,7 @@ public class TransparentHost extends CommandLineTool {
             System.out.println("\nTransparent host proxy server running, listening on port " + port);
             System.out.println("Transparently proxy " + hosts + " to: " + proxyTo);
             if (shutdownKey != null) {
-                System.out.println("Shutdown url http://localhost:" + port + shutdownContext + "/"
+                System.out.println("Shutdown url http://localhost:" + port + "/" + shutdownContext + "/"
                         + shutdownKey + "\n");
             }
         } catch (Exception e) {

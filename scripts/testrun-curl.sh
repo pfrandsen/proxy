@@ -2,12 +2,6 @@
 pushd ..
 mvn clean package
 
-echo
-echo "Important! Chrome must be shut down"
-echo "ie. _not_ running in background (as is default) and no open windows"
-echo "else --proxy-server command line option has no effect"
-echo
-
 hosts="a.com,b.com"
 port=9999
 prg="java -jar target/proxy-1.0-SNAPSHOT.jar -filesystemProxy -chatty -port ${port}"
@@ -30,17 +24,10 @@ cmd2="${prgTB} -proxyToUri http://localhost:${port} -hosts ${hosts} -shutdownKey
 echo "Running: ${cmd2}"
 `exec x-terminal-emulator 1>&2 -e $cmd2`
 
-sleep 2s # if Chrome is already running it may launch tab before proxies are initialized
+sleep 2s # pause to let proxies startup
 
-# start two Chrome tabs that are proxied through transparent host proxy to file system proxy (using two
-# different handlers)
-
-google-chrome --incognito --proxy-server="localhost:${portTP}" http://a.com/sample.html &
-google-chrome --incognito --proxy-server="localhost:${portTP}" http://b.com/context/sample.html &
-
-# start one Chrome tab that is not proxied (using system proxy or direct connection to the internet)
-
-google-chrome --incognito --proxy-server="localhost:${portTP}" http://google.com &
+curl --proxy "localhost:${portTP}" http://a.com/sample.html
+curl --proxy "localhost:${portTP}" http://b.com/context/sample.html
 
 echo
 echo "To shut down filesystem proxy server, close terminal where proxy is running"
