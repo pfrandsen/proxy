@@ -25,8 +25,8 @@ public class FileSystemProxy extends CommandLineTool {
 
     // context path, / -> no context path
 
-    public static String USAGE = "Usage: java -jar <jar-file> " + arg(Runner.OPTION_FILESYSTEM_PROXY) + " " +
-            arg(OPTION_ROOT) + " <directory> [" + arg(Runner.OPTION_PORT) + " <port>] " + arg(OPTIONS_VIRTUAL_HOSTS) +
+    public static String USAGE = "Usage: java -jar <jar-file> " + arg(Runner.OPTION_FILESYSTEM_PROXY) + " [" +
+            arg(OPTION_ROOT) + " <directory>] [" + arg(Runner.OPTION_PORT) + " <port>] " + arg(OPTIONS_VIRTUAL_HOSTS) +
             " <host> [,<host>]* " + arg(OPTIONS_SUBDIRECTORIES) + " <subdirectory> [,<subdirectory>]* " +
             arg(OPTIONS_CONTEXT_PATHS) + " <context> [,<context>]* " + arg(OPTIONS_LOGICAL_NAMES) +
             " <name> [,<name>]* [" + arg(Runner.OPTIONS_CHATTY) + "] ["  + arg(OPTIONS_SHUTDOWN_CONTEXT)
@@ -59,8 +59,9 @@ public class FileSystemProxy extends CommandLineTool {
         Options options = new Options();
         Option help = new Option(Runner.OPTION_HELP, "Show usage information.");
         Option root = new Option(OPTION_ROOT, true,
-                "Root directory. All virtual host to subdirectory mappings are relative to this.");
-        root.setRequired(true);
+                "Root directory. If provided then all virtual host to subdirectory mappings are relative to this. " +
+                "Else subdirectories are used as 'full paths'.");
+        root.setRequired(false);
         root.setArgName("directory");
         Option port = new Option(Runner.OPTION_PORT, true, "Port proxy server will listen on. Valid range " +
                 MIN_PORT_VALUE + "-" + MAX_PORT_VALUE + ". Default port is " + DEFAULT_PORT + ". Optional.");
@@ -123,7 +124,10 @@ public class FileSystemProxy extends CommandLineTool {
     public void run(CommandLine cmd) {
         LocalFileProxy proxy = new LocalFileProxy();
         int port = DEFAULT_PORT; // proxy.getDefaultPort();
-        Path root = Paths.get(cmd.getOptionValue(OPTION_ROOT));
+        Path root = null;
+        if (cmd.hasOption(OPTION_ROOT)) {
+            root = Paths.get(cmd.getOptionValue(OPTION_ROOT));
+        }
         if (cmd.hasOption(Runner.OPTION_PORT)) {
             if (!isInteger(cmd.getOptionValue(Runner.OPTION_PORT), MIN_PORT_VALUE, MAX_PORT_VALUE)) {
                 System.err.println("Port (" + cmd.getOptionValue(Runner.OPTION_PORT) + ") must be integer in range " +
@@ -170,11 +174,23 @@ public class FileSystemProxy extends CommandLineTool {
             if (logicalNames != null) {
                 name = logicalNames[idx].trim();
             }
-            String uri = root.resolve(subdirectories[idx].trim()).toString();
+            String uri = subdirectories[idx].trim();
+            if (root != null) {
+                uri = root.resolve(subdirectories[idx].trim()).toString();
+            }
+            try {
+                if (!proxy.appendContextHandler(name, chatty, contextPath, virtualHost, uri)) {
+                    System.err.println("Could not create context handler for " + virtualHost);
+                }
+            } catch (Exception e) {
+                System.err.println("Could not create context handler for " + virtualHost);
+            }
+/*
             if (!proxy.appendContextHandler(name, chatty, contextPath, virtualHost, uri)) {
                 System.err.println("Could not create context handler for " + virtualHost);
                 return;
             }
+*/
         }
         // add optional shutdown handler
         if (cmd.hasOption(OPTIONS_SHUTDOWN_CONTEXT)) {

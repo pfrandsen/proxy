@@ -39,7 +39,7 @@ public class ContextHandlerInterceptor extends ContextHandler {
     }
 
     protected void doStart() throws Exception {
-        System.out.println("Starting '${logicalName}' handler");
+        System.out.println("Starting '" + logicalName + "' handler");
         super.doStart();
     }
 
